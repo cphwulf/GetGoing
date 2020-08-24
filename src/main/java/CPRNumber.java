@@ -1,4 +1,3 @@
-import java.rmi.RMISecurityManager;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -10,6 +9,7 @@ public class CPRNumber {
     int magicNumber;
     Random rd;
     String cprnumber;
+    int[] multipliers = {4, 3, 2, 7, 6, 5, 4, 3, 2};
 
     public CPRNumber() {
         rd = new Random();
@@ -18,38 +18,35 @@ public class CPRNumber {
     }
 
     public void setCpr() {
+        // find et random tal vi kan bruge til at regne bagud
         int daysback = rd.nextInt(36500);
         int year = 0;
         int month = 0;
         int day =  0;
         int thisYear = date.getYear();
+
+        // find fødselsdagen 2020-08-24
         date = date.minusDays(daysback);
+
+        // fra Date til int
         int thatYear = date.getYear();
         int thatMonth = date.getMonthValue();
         int thatDay = date.getDayOfMonth();
         // 1940-08-24
-        /*
-        DateTimeFormatter df = DateTimeFormatter.ofPattern("YYYY-MM-dd");
-        //int datoToString = date.format("")
-        //String datoToString = date.format(df);
-        String datoToString = "1970-01-01";
-        Pattern pattern = Pattern.compile("(\\d+)-(\\d+)-(\\d+)");
-        Pattern numpattern = Pattern.compile("([0-9])(\\d)-(\\d)");
-        Matcher matcher = pattern.matcher(datoToString);
-        if (matcher.find()) {
-            year = Integer.parseInt(matcher.group(1));
-            month = Integer.parseInt(matcher.group(2));
-            day = Integer.parseInt(matcher.group(3));
-        }
-        */
+
+        // fra intparts til Stringpsarts
         String thatMonthString = String.valueOf(thatMonth);
         String thatDayString = String.valueOf(thatDay);
         if (thatYear > 1999) {
             thatYear = thatYear-2000;
+            // 2008-2000=8
         } else {
             thatYear = thatYear-1900;
+            //1964-1900=64
         }
         String thatYearString = String.valueOf(thatYear);
+
+        // fixe "0" karakteren
         if (thatYear < 10) {
             thatYearString = "0"+thatYear;
         }
@@ -59,9 +56,15 @@ public class CPRNumber {
         if (thatDay < 10) {
             thatDayString = "0"+thatDay;
         }
+
+        // fra almString til cprDatoString 1940-08-24 -> 240840
         String birthdayString = thatDayString+thatMonthString+thatYearString;
+
+        //
         int birthdayInt = Integer.parseInt(String.format("%d%d%s",thatDay,thatMonth,thatYear));
         int magicNumber = rd.nextInt(998)+1;
+        int lastNumber = 0;
+
         String magicNumberStr = "";
         if (magicNumber<10) {
             magicNumberStr = String.format("00%d",magicNumber);
@@ -70,22 +73,32 @@ public class CPRNumber {
         } else {
             magicNumberStr = String.format("%d",magicNumber);
         }
-        //int sum = calcSum(birthdayInt);
+      int sum = calcSum(birthdayString+magicNumberStr);
+        /*
         int sum = birthdayInt;
             while(sum > 9) {
                 sum = calcSum(sum);
             }
+            */
         int rest = sum+magicNumber%11;
         int lastNum = 11-rest;
         cprnumber = birthdayString+" " + magicNumberStr+rest;
     }
 
-    public int calcSum(int feed) {
+    public int calcSum(String feed) {
+        int retVal = 0;
+        for(int i=0;i < multipliers.length;i++) {
+            retVal += multipliers[i]*(int)(feed.charAt(i));
+        }
+        /*
         if (feed == 0) {
             return feed;
         } else {
             return (feed%10) + calcSum(feed/10);
         }
+
+         */
+        return retVal;
     }
 
 }
